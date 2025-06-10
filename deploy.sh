@@ -1,19 +1,28 @@
 #!/bin/bash
 
-# Variables
-IMAGE_NAME="ivosalumbides/dockersample"
-VERSION=$1  # e.g. v1, v2, v3
+# CONFIG
+DOCKER_USERNAME="ivosalumbides"
+REPO_NAME="dockersample"
+VERSION=$1
 
-# Step 1: Build image
-echo "🔧 Building Docker image..."
-docker build -t dev:$VERSION .
+if [ -z "$VERSION" ]; then
+  echo "Usage: ./deploy.sh <version>"
+  exit 1
+fi
 
-# Step 2: Tag image
-echo "🏷️ Tagging image as $IMAGE_NAME:$VERSION"
-docker tag dev:$VERSION $IMAGE_NAME:$VERSION
+IMAGE="$DOCKER_USERNAME/$REPO_NAME:$VERSION"
 
-# Step 3: Push image
-echo "📤 Pushing to Docker Hub..."
-docker push $IMAGE_NAME:$VERSION
+# Build the image
+docker build -t $IMAGE .
 
-echo "✅ Done! Image pushed: $IMAGE_NAME:$VERSION"
+# Also tag as latest
+docker tag $IMAGE $DOCKER_USERNAME/$REPO_NAME:latest
+
+# Login
+docker login
+
+# Push both tags
+docker push $IMAGE
+docker push $DOCKER_USERNAME/$REPO_NAME:latest
+
+echo "Image pushed: $IMAGE and latest"
